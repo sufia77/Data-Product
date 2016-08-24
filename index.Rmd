@@ -1,0 +1,92 @@
+---
+title       : Data Product Project of Coursera
+subtitle    : Estimate Height for Father or Son
+author      : Sufia Khatun
+job         : 
+framework   : io2012        # {io2012, html5slides, shower, dzslides, ...}
+highlighter : highlight.js  # {highlight.js, prettify, highlight}
+hitheme     : tomorrow      # 
+widgets     : [mathjax]            # {mathjax, quiz, bootstrap}
+mode        : selfcontained # {standalone, draft}
+knit        : slidify::knit2slides
+---
+
+## Introduction
+
+* The goal of this study was to  predict son's height from given father's height. There is a possibility that a tall father can have a short son, also a short father can have a tall son. This study can predict how much difference can be between a father and a son height.
+* Data for this study was collected from Pearson's data. There are 1078 measurements of a father's height and his son's height in inches. Details can be found from the [link](http://stat-www.berkeley.edu/users/juliab/141C/pearson.dat)
+
+The summary of this data:
+```{r message=FALSE}
+library(UsingR)
+data("father.son")
+str(father.son)
+```
+
+
+--- .class #id 
+
+## Regression Model
+
+Since, there are only two variables in this dataset, linear regression model was used to fit the dataset and predict the son's height. For an example, let's assume to predict son's height for father's height of 65 inches.
+
+### Coefficient of Model.
+
+```{r echo=FALSE, message=FALSE}
+ fit1 <- lm(sheight~fheight, data = father.son)
+summary(fit1)$coef
+```
+
+### Predicted Son Height for Father Height of 65 inches
+```{r echo=FALSE, message=FALSE}
+
+round(predict(fit1, newdata = data.frame(fheight = 65)),2)
+```
+
+
+--- &twocol 
+
+### Plot of Predicted Son height for Father Height of 65 Inches
+
+*** =left
+```{r echo=FALSE, message=FALSE}
+library(ggplot2)
+g <- ggplot(data = father.son, aes(x=fheight, y=sheight))
+g + geom_point(col="light green") + geom_smooth(method = "lm")+
+  geom_hline(yintercept = predict(fit1, newdata = data.frame(fheight = 65)))+labs(x="Fathers Height (inches)", y="Sons Height (inches)")+
+  ggtitle("Sons versus Fathers Height")
+```
+
+*** =right
+* This is son's versus father's height data.
+* The green dot shows the raw data.
+* Blue line shows the fit from linear regression model.
+* Black horizontal line shows the predicted value that is 67.3 inches for father height of 65 inches.
+* Interactive plot of this study will be found from the following shiny app [link](https://skhatun.shinyapps.io/PredictHeight/)
+* In the app, you can predict son's height from father's height and also can estimate father's height from given son's height.
+
+--- .class #id
+
+## Main Code for Shiny App
+
+Following code is for predicting son's height from father's height.
+
+```{r font = 11}
+function(input, output){
+    fit1 <- lm(sheight~fheight, data = father.son) # Model 1
+    # Predicted value    
+    output$pred <- renderPrint({
+        paste(round(as.numeric(predict(fit1, newdata = data.frame(fheight = input$height))),2))
+    })
+    # Plot with Predicted value
+    output$gplot <- renderPlot({
+        g <- ggplot(data = father.son, aes(x=fheight, y=sheight))
+        g1 <- g + geom_point(col="light green") + geom_smooth(method = "lm")+
+          geom_hline(yintercept = predict(fit1, newdata = data.frame(fheight = input$height)))+
+          labs(x="Fathers Height (inches)", y="Sons Height (inches)")+
+          ggtitle("Sons versus Fathers Height")
+    })
+}
+
+```
+
